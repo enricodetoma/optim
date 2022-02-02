@@ -41,10 +41,6 @@
 
 //
 
-#ifdef _MSC_VER
-    #error OptimLib: MSVC is not supported
-#endif
-
 //
 
 #if defined(_OPENMP) && !defined(OPTIM_DONT_USE_OPENMP)
@@ -77,19 +73,9 @@
 
 // floating point number type
 
-#ifndef OPTIM_FPN_TYPE
-    #define OPTIM_FPN_TYPE double
-#endif
-
-#if OPTIM_FPN_TYPE == float
-    #undef OPTIM_FPN_SMALL_NUMBER
-    #define OPTIM_FPN_SMALL_NUMBER fp_t(1e-05)
-#elif OPTIM_FPN_TYPE == double
-    #undef OPTIM_FPN_SMALL_NUMBER
-    #define OPTIM_FPN_SMALL_NUMBER fp_t(1e-08)
-#else
-    #error OptimLib: floating-point number type (OPTIM_FPN_TYPE) must be 'float' or 'double'
-#endif
+#define OPTIM_FPN_TYPE double
+#undef OPTIM_FPN_SMALL_NUMBER
+#define OPTIM_FPN_SMALL_NUMBER fp_t(1e-08)
 
 //
 
