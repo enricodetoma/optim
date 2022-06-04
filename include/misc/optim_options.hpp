@@ -43,18 +43,6 @@
 
 //
 
-#if defined(_OPENMP) && !defined(OPTIM_DONT_USE_OPENMP)
-    #undef OPTIM_USE_OPENMP
-    #define OPTIM_USE_OPENMP
-#endif
-
-#if !defined(_OPENMP) && defined(OPTIM_USE_OPENMP)
-    #undef OPTIM_USE_OPENMP
-
-    #undef OPTIM_DONE_USE_OPENMP
-    #define OPTIM_DONE_USE_OPENMP
-#endif
-
 #ifdef OPTIM_USE_OPENMP
     #include "omp.h" //  OpenMP
 #endif
