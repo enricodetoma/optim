@@ -80,8 +80,7 @@ namespace optim
 
 //
 
-#if defined(OPTIM_ENABLE_CUSTOM_WRAPPERS)
-#elif defined(OPTIM_ENABLE_ARMA_WRAPPERS) || defined(OPTIM_USE_RCPP_ARMADILLO)
+#if defined(OPTIM_ENABLE_ARMA_WRAPPERS) || defined(OPTIM_USE_RCPP_ARMADILLO)
     #ifndef OPTIM_ENABLE_ARMA_WRAPPERS
         #define OPTIM_ENABLE_ARMA_WRAPPERS
     #endif
