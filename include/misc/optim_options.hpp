@@ -149,6 +149,7 @@ namespace optim
         using RowVecInt_t = Eigen::Matrix<int, 1, Eigen::Dynamic>;
         using ColVecUInt_t = Eigen::Matrix<size_t, Eigen::Dynamic, 1>;
     }
+#elif defined(OPTIM_ENABLE_CUSTOM_WRAPPERS)
 #else
     #error OptimLib: you must enable the Armadillo OR Eigen wrappers
 #endif
