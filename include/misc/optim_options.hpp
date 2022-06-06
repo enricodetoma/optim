@@ -80,7 +80,8 @@ namespace optim
 
 //
 
-#if defined(OPTIM_ENABLE_ARMA_WRAPPERS) || defined(OPTIM_USE_RCPP_ARMADILLO)
+#if defined(OPTIM_ENABLE_CUSTOM_WRAPPERS)
+#elif defined(OPTIM_ENABLE_ARMA_WRAPPERS) || defined(OPTIM_USE_RCPP_ARMADILLO)
     #ifndef OPTIM_ENABLE_ARMA_WRAPPERS
         #define OPTIM_ENABLE_ARMA_WRAPPERS
     #endif
@@ -149,7 +150,6 @@ namespace optim
         using RowVecInt_t = Eigen::Matrix<int, 1, Eigen::Dynamic>;
         using ColVecUInt_t = Eigen::Matrix<size_t, Eigen::Dynamic, 1>;
     }
-#elif defined(OPTIM_ENABLE_CUSTOM_WRAPPERS)
 #else
     #error OptimLib: you must enable the Armadillo OR Eigen wrappers
 #endif
