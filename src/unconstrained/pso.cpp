@@ -1,6 +1,6 @@
 /*################################################################################
   ##
-  ##   Copyright (C) 2016-2022 Keith O'Hara
+  ##   Copyright (C) 2016-2023 Keith O'Hara
   ##
   ##   This file is part of the OptimLib C++ library.
   ##
@@ -54,13 +54,14 @@ optim::internal::pso_impl(
 
     const bool center_particle = settings.pso_settings.center_particle;
 
-    const size_t n_pop = (center_particle) ? settings.pso_settings.n_pop + 1 : settings.pso_settings.n_pop;
+    const size_t n_center = (center_particle) ? 1 : 0;
+    const size_t n_pop = settings.pso_settings.n_pop;
     const size_t n_gen = settings.pso_settings.n_gen;
     const size_t check_freq = settings.pso_settings.check_freq;
 
     const uint_t inertia_method = settings.pso_settings.inertia_method;
 
-    fp_t par_w = settings.pso_settings.par_initial_w;
+    fp_t par_w = settings.pso_settings.par_w;
     const fp_t par_w_max = settings.pso_settings.par_w_max;
     const fp_t par_w_min = settings.pso_settings.par_w_min;
     const fp_t par_damp = settings.pso_settings.par_w_damp;
@@ -68,11 +69,11 @@ optim::internal::pso_impl(
     const uint_t velocity_method = settings.pso_settings.velocity_method;
 
     fp_t par_c_cog = settings.pso_settings.par_c_cog;
-    fp_t par_c_soc = settings.pso_settings.par_c_soc;
-
-    const fp_t par_initial_c_cog = settings.pso_settings.par_initial_c_cog;
+    const fp_t par_initial_c_cog = par_c_cog;
     const fp_t par_final_c_cog = settings.pso_settings.par_final_c_cog;
-    const fp_t par_initial_c_soc = settings.pso_settings.par_initial_c_soc;
+
+    fp_t par_c_soc = settings.pso_settings.par_c_soc;
+    const fp_t par_initial_c_soc = par_c_soc;
     const fp_t par_final_c_soc = settings.pso_settings.par_final_c_soc;
 
     const bool return_position_mat = settings.pso_settings.return_position_mat;
@@ -89,13 +90,11 @@ optim::internal::pso_impl(
 
     sampling_bounds_check(vals_bound, n_vals, bounds_type, lower_bounds, upper_bounds, par_initial_lb, par_initial_ub);
 
-    // random sampling setup
+    // parallelization setup
 
     int omp_n_threads = 1;
-    rand_engine_t rand_engine(settings.rng_seed_value);
-    std::vector<rand_engine_t> engines;
 
-#ifdef OPTIM_USE_OMP
+#ifdef OPTIM_USE_OPENMP
     if (settings.pso_settings.omp_n_threads > 0) {
         omp_n_threads = settings.pso_settings.omp_n_threads;
     } else {
@@ -103,9 +102,14 @@ optim::internal::pso_impl(
     }
 #endif
 
+    // random sampling setup
+
+    rand_engine_t rand_engine(settings.rng_seed_value);
+    std::vector<rand_engine_t> rand_engines_vec;
+
     for (int i = 0; i < omp_n_threads; ++i) {
         size_t seed_val = generate_seed_value(i, omp_n_threads, rand_engine);
-        engines.push_back(rand_engine_t(seed_val));
+        rand_engines_vec.push_back(rand_engine_t(seed_val));
     }
 
     // lambda function for box constraints
@@ -127,26 +131,22 @@ optim::internal::pso_impl(
     // initialize
 
     ColVec_t rand_vec(n_vals);
-    ColVec_t objfn_vals(n_pop);
-    Mat_t P(n_pop,n_vals);
+    ColVec_t objfn_vals(n_pop + n_center);
+    Mat_t P(n_pop + n_center, n_vals);
 
-#ifdef OPTIM_USE_OMP
-    #pragma omp parallel for num_threads(omp_n_threads) private(rand_vec)
+#ifdef OPTIM_USE_OPENMP
+    #pragma omp parallel for num_threads(omp_n_threads) firstprivate(rand_vec)
 #endif
     for (size_t i = 0; i < n_pop; ++i) {
         size_t thread_num = 0;
 
-#ifdef OPTIM_USE_OMP
+#ifdef OPTIM_USE_OPENMP
         thread_num = omp_get_thread_num();
 #endif
 
-        if (center_particle && i == n_pop - 1) {
-            P.row(i) = BMO_MATOPS_COLWISE_SUM( BMO_MATOPS_MIDDLE_ROWS(P, 0, n_pop-2) ) / static_cast<fp_t>(n_pop-1); // center vector
-        } else {
-            bmo_stats::internal::runif_vec_inplace<fp_t>(n_vals, engines[thread_num], rand_vec);
-
-            P.row(i) = BMO_MATOPS_TRANSPOSE( par_initial_lb + BMO_MATOPS_HADAMARD_PROD( (par_initial_ub - par_initial_lb), rand_vec ) );
-        }
+        bmo::stats::internal::runif_vec_inplace<fp_t>(n_vals, rand_engines_vec[thread_num], rand_vec);
+        
+        P.row(i) = BMO_MATOPS_TRANSPOSE( par_initial_lb + BMO_MATOPS_HADAMARD_PROD( (par_initial_ub - par_initial_lb), rand_vec ) );
 
         fp_t prop_objfn_val = opt_objfn(BMO_MATOPS_TRANSPOSE(P.row(i)), nullptr, opt_data);
 
@@ -161,13 +161,28 @@ optim::internal::pso_impl(
         }
     }
 
+    if (center_particle) {
+        // taken outside the loop due to parallelization
+        P.row(n_pop) = BMO_MATOPS_COLWISE_SUM( BMO_MATOPS_MIDDLE_ROWS(P, 0, n_pop - 1) ) / static_cast<fp_t>(n_pop); // center vector
+
+        fp_t prop_objfn_val = box_objfn( BMO_MATOPS_TRANSPOSE(P.row(n_pop)), nullptr, opt_data);
+
+        if (!std::isfinite(prop_objfn_val)) {
+            prop_objfn_val = inf;
+        }
+        
+        objfn_vals(n_pop) = prop_objfn_val;
+    }
+
     ColVec_t best_vals = objfn_vals;
     Mat_t best_vecs = P;
 
     fp_t min_objfn_val_running = BMO_MATOPS_MIN_VAL(objfn_vals);
     fp_t min_objfn_val_check = min_objfn_val_running;
     
-    RowVec_t best_sol_running = P.row( index_min(objfn_vals) );
+    RowVec_t best_sol_running = P.row( bmo::index_min(objfn_vals) );
+
+    OPTIM_PSO_TRACE(0, 0, min_objfn_val_running, min_objfn_val_check, best_sol_running, P);
 
     //
     // begin loop
@@ -177,7 +192,7 @@ optim::internal::pso_impl(
 
     RowVec_t rand_vec_1(n_vals);
     RowVec_t rand_vec_2(n_vals);
-    Mat_t V = BMO_MATOPS_ZERO_MAT(n_pop,n_vals);
+    Mat_t V = BMO_MATOPS_ZERO_MAT(n_pop, n_vals);
 
     while (rel_objfn_change > rel_objfn_change_tol && iter < n_gen) {
         ++iter;
@@ -199,30 +214,23 @@ optim::internal::pso_impl(
         //
         // population loop
 
-#ifdef OPTIM_USE_OMP
-        #pragma omp parallel for num_threads(omp_n_threads) private(rand_vec_1,rand_vec_2)
+#ifdef OPTIM_USE_OPENMP
+        #pragma omp parallel for num_threads(omp_n_threads) firstprivate(rand_vec_1,rand_vec_2)
 #endif
         for (size_t i=0; i < n_pop; ++i) {
             size_t thread_num = 0;
 
-#ifdef OPTIM_USE_OMP
+#ifdef OPTIM_USE_OPENMP
             thread_num = omp_get_thread_num();
 #endif
 
-            if ( !(center_particle && i == n_pop - 1) ) {
-                bmo_stats::internal::runif_vec_inplace<fp_t>(n_vals, engines[thread_num], rand_vec_1);
-                bmo_stats::internal::runif_vec_inplace<fp_t>(n_vals, engines[thread_num], rand_vec_2);
+            bmo::stats::internal::runif_vec_inplace<fp_t>(n_vals, rand_engines_vec[thread_num], rand_vec_1);
+            bmo::stats::internal::runif_vec_inplace<fp_t>(n_vals, rand_engines_vec[thread_num], rand_vec_2);
 
-                // RowVec_t rand_vec_1 = bmo_stats::runif_vec<fp_t, RowVec_t>(n_vals, engines[thread_num]);
-                // RowVec_t rand_vec_2 = bmo_stats::runif_vec<fp_t, RowVec_t>(n_vals, engines[thread_num]);
+            V.row(i) = par_w * V.row(i) + par_c_cog * BMO_MATOPS_HADAMARD_PROD( rand_vec_1, (best_vecs.row(i) - P.row(i)) ) \
+                + par_c_soc * BMO_MATOPS_HADAMARD_PROD( rand_vec_2, (best_sol_running - P.row(i)) );
 
-                V.row(i) = par_w * V.row(i) + par_c_cog * BMO_MATOPS_HADAMARD_PROD( rand_vec_1, (best_vecs.row(i) - P.row(i)) ) \
-                    + par_c_soc * BMO_MATOPS_HADAMARD_PROD( rand_vec_2, (best_sol_running - P.row(i)) );
-
-                P.row(i) += V.row(i);
-            } else {
-                P.row(i) = BMO_MATOPS_COLWISE_SUM( BMO_MATOPS_MIDDLE_ROWS(P, 0, n_pop-2) ) / static_cast<fp_t>(n_pop-1); // center vector
-            }
+            P.row(i) += V.row(i);
             
             //
 
@@ -240,7 +248,25 @@ optim::internal::pso_impl(
             }
         }
 
-        size_t min_objfn_val_index = index_min(best_vals);
+        if (center_particle) {
+            // taken outside the loop due to parallelization
+            P.row(n_pop) = BMO_MATOPS_COLWISE_SUM( BMO_MATOPS_MIDDLE_ROWS(P, 0, n_pop - 1) ) / static_cast<fp_t>(n_pop); // center vector
+
+            fp_t prop_objfn_val = box_objfn( BMO_MATOPS_TRANSPOSE(P.row(n_pop)), nullptr, opt_data);
+
+            if (!std::isfinite(prop_objfn_val)) {
+                prop_objfn_val = inf;
+            }
+        
+            objfn_vals(n_pop) = prop_objfn_val;
+                
+            if (objfn_vals(n_pop) < best_vals(n_pop)) {
+                best_vals(n_pop) = objfn_vals(n_pop);
+                best_vecs.row(n_pop) = P.row(n_pop);
+            }
+        }
+
+        size_t min_objfn_val_index = bmo::index_min(best_vals);
         fp_t min_objfn_val = best_vals(min_objfn_val_index);
 
         //
@@ -267,10 +293,10 @@ optim::internal::pso_impl(
 
     if (return_position_mat) {
         if (vals_bound) {
-#ifdef OPTIM_USE_OMP
-        #pragma omp parallel for num_threads(omp_n_threads)
+#ifdef OPTIM_USE_OPENMP
+            #pragma omp parallel for num_threads(omp_n_threads)
 #endif
-            for (size_t i = 0; i < n_pop; ++i) {
+            for (size_t i = 0; i < n_pop + n_center; ++i) {
                 P.row(i) = inv_transform<RowVec_t>(P.row(i), bounds_type, lower_bounds, upper_bounds);
             }
         }
@@ -290,7 +316,7 @@ optim::internal::pso_impl(
 
     //
 
-    return true;
+    return success;
 }
 
 optimlib_inline

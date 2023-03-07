@@ -1,6 +1,6 @@
 /*################################################################################
   ##
-  ##   Copyright (C) 2016-2022 Keith O'Hara
+  ##   Copyright (C) 2016-2023 Keith O'Hara
   ##
   ##   This file is part of the OptimLib C++ library.
   ##
@@ -147,7 +147,7 @@ optim::internal::gd_basic_impl(
         //
 
         ColVec_t d_p = gd_update(x, grad, grad_p, d, box_objfn, opt_data, iter,
-                              gd_settings, adam_vec_m, adam_vec_v);
+                                 gd_settings, adam_vec_m, adam_vec_v);
 
         ColVec_t x_p = x - d_p;
         grad = grad_p;

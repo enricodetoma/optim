@@ -1,6 +1,6 @@
 /*################################################################################
   ##
-  ##   Copyright (C) 2016-2022 Keith O'Hara
+  ##   Copyright (C) 2016-2023 Keith O'Hara
   ##
   ##   This file is part of the OptimLib C++ library.
   ##
@@ -120,7 +120,7 @@ struct de_settings_t
 
     int omp_n_threads = -1; // numbers of threads to use
 
-    int mutation_method = 1; // 1 = rand; 2 = best
+    size_t mutation_method = 1; // 1 = rand; 2 = best
 
     size_t check_freq = (size_t)-1;
 
@@ -157,16 +157,16 @@ struct pso_settings_t
 {
     bool center_particle = true;
 
-    size_t n_pop = 100;
+    size_t n_pop = 200;
     size_t n_gen = 1000;
+
+    size_t check_freq = (size_t)-1;
 
     int omp_n_threads = -1; // numbers of threads to use
 
     int inertia_method = 1; // 1 for linear decreasing between w_min and w_max; 2 for dampening
 
-    size_t check_freq = (size_t)-1;
-
-    fp_t par_initial_w = 1.0;
+    fp_t par_w = 1.0;
     fp_t par_w_damp = 0.99;
 
     fp_t par_w_min = 0.10;
@@ -177,9 +177,7 @@ struct pso_settings_t
     fp_t par_c_cog = 2.0;
     fp_t par_c_soc = 2.0;
 
-    fp_t par_initial_c_cog = 2.5;
     fp_t par_final_c_cog   = 0.5;
-    fp_t par_initial_c_soc = 0.5;
     fp_t par_final_c_soc   = 2.5;
 
     ColVec_t initial_lb; // this will default to -0.5
@@ -224,8 +222,8 @@ struct algo_settings_t
 
     size_t iter_max = 2000;
 
-    fp_t grad_err_tol  = 1E-08;
-    fp_t rel_sol_change_tol  = 1E-14;
+    fp_t grad_err_tol = 1E-08;
+    fp_t rel_sol_change_tol = 1E-14;
     fp_t rel_objfn_change_tol = 1E-08;
 
     // bounds
@@ -242,8 +240,6 @@ struct algo_settings_t
 
     size_t opt_iter;
     fp_t opt_error_value;
-
-    // algorithm-specific parameters
 
     // BFGS
     bfgs_settings_t bfgs_settings;

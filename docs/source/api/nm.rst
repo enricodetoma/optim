@@ -1,4 +1,4 @@
-.. Copyright (c) 2016-2022 Keith O'Hara
+.. Copyright (c) 2016-2023 Keith O'Hara
 
    Distributed under the terms of the Apache License, Version 2.0.
 
@@ -113,17 +113,17 @@ Function Declarations
 ---------------------
 
 .. _nm-func-ref1:
-.. doxygenfunction:: nm(ColVec_t&, std::function<fp_tconst ColVec_t &vals_inp, ColVec_t *grad_out, void *opt_data>, void *)
+.. doxygenfunction:: nm(ColVec_t& init_out_vals, std::function<fp_t (const ColVec_t& vals_inp, ColVec_t* grad_out, void* opt_data)> opt_objfn, void* opt_data)
    :project: optimlib
 
 .. _nm-func-ref2:
-.. doxygenfunction:: nm(ColVec_t&, std::function<fp_tconst ColVec_t &vals_inp, ColVec_t *grad_out, void *opt_data>, void *, algo_settings_t&)
+.. doxygenfunction:: nm(ColVec_t& init_out_vals, std::function<fp_t (const ColVec_t& vals_inp, ColVec_t* grad_out, void* opt_data)> opt_objfn, void* opt_data, algo_settings_t& settings)
    :project: optimlib
 
 ----
 
 Optimization Control Parameters
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-------------------------------
 
 The basic control parameters are:
 

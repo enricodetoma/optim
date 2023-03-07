@@ -1,4 +1,4 @@
-.. Copyright (c) 2016-2022 Keith O'Hara
+.. Copyright (c) 2016-2023 Keith O'Hara
 
    Distributed under the terms of the Apache License, Version 2.0.
 
@@ -71,25 +71,25 @@ Function Declarations
 ---------------------
 
 .. _broyden-func-ref1:
-.. doxygenfunction:: broyden(ColVec_t&, std::function<Vec_tconst ColVec_t &vals_inp, void *opt_data>, void *)
+.. doxygenfunction:: broyden(ColVec_t& init_out_vals, std::function<ColVec_t (const ColVec_t& vals_inp, void* opt_data)> opt_objfn, void* opt_data)
    :project: optimlib
 
 .. _broyden-func-ref2:
-.. doxygenfunction:: broyden(ColVec_t&, std::function<Vec_tconst ColVec_t &vals_inp, void *opt_data>, void *, algo_settings_t&)
+.. doxygenfunction:: broyden(ColVec_t& init_out_vals, std::function<ColVec_t (const ColVec_t& vals_inp, void* opt_data)> opt_objfn, void* opt_data, algo_settings_t& settings)
    :project: optimlib
 
 .. _broyden-func-ref3:
-.. doxygenfunction:: broyden(ColVec_t&, std::function<Vec_tconst ColVec_t &vals_inp, void *opt_data>, void *, std::function<Mat_tconst ColVec_t &vals_inp, void *jacob_data>, void *)
+.. doxygenfunction:: broyden(ColVec_t& init_out_vals, std::function<ColVec_t (const ColVec_t& vals_inp, void* opt_data)> opt_objfn, void* opt_data, std::function<Mat_t (const ColVec_t& vals_inp, void* jacob_data)> jacob_objfn, void* jacob_data)
    :project: optimlib
 
 .. _broyden-func-ref4:
-.. doxygenfunction:: broyden(ColVec_t&, std::function<Vec_tconst ColVec_t &vals_inp, void *opt_data>, void *, std::function<Mat_tconst ColVec_t &vals_inp, void *jacob_data>, void *, algo_settings_t&)
+.. doxygenfunction:: broyden(ColVec_t& init_out_vals, std::function<ColVec_t (const ColVec_t& vals_inp, void* opt_data)> opt_objfn, void* opt_data, std::function<Mat_t (const ColVec_t& vals_inp, void* jacob_data)> jacob_objfn, void* jacob_data, algo_settings_t& settings)
    :project: optimlib
 
 ----
 
 Optimization Control Parameters
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-------------------------------
 
 The basic control parameters are:
 

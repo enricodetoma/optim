@@ -1,4 +1,4 @@
-.. Copyright (c) 2016-2022 Keith O'Hara
+.. Copyright (c) 2016-2023 Keith O'Hara
 
    Distributed under the terms of the Apache License, Version 2.0.
 
@@ -36,11 +36,11 @@ Definitions
 -----------
 
 .. _sumt-func-ref1:
-.. doxygenfunction:: sumt(ColVec_t&, std::function<fp_tconst ColVec_t &vals_inp, ColVec_t *grad_out, void *opt_data>, void *, std::function<Vec_tconst ColVec_t &vals_inp, Mat_t *jacob_out, void *constr_data>, void *)
+.. doxygenfunction:: sumt(ColVec_t& init_out_vals, std::function<fp_t (const ColVec_t& vals_inp, ColVec_t* grad_out, void* opt_data)> opt_objfn, void* opt_data, std::function<ColVec_t (const ColVec_t& vals_inp, Mat_t* jacob_out, void* constr_data)> constr_fn, void* constr_data)
    :project: optimlib
 
 .. _sumt-func-ref2:
-.. doxygenfunction:: sumt(ColVec_t&, std::function<fp_tconst ColVec_t &vals_inp, ColVec_t *grad_out, void *opt_data>, void *, std::function<Vec_tconst ColVec_t &vals_inp, Mat_t *jacob_out, void *constr_data>, void *, algo_settings_t&)
+.. doxygenfunction:: sumt(ColVec_t& init_out_vals, std::function<fp_t (const ColVec_t& vals_inp, ColVec_t* grad_out, void* opt_data)> opt_objfn, void* opt_data, std::function<ColVec_t (const ColVec_t& vals_inp, Mat_t* jacob_out, void* constr_data)> constr_fn, void* constr_data, algo_settings_t& settings)
    :project: optimlib
 
 ----

@@ -1,4 +1,4 @@
-.. Copyright (c) 2016-2022 Keith O'Hara
+.. Copyright (c) 2016-2023 Keith O'Hara
 
    Distributed under the terms of the Apache License, Version 2.0.
 
@@ -9,13 +9,13 @@
 Installation
 ============
 
-OptimLib is available as a compiled shared library, or as header-only library, for Unix-alike systems only (e.g., popular Linux-based distros, as well as macOS). Note that use of this library with Windows-based systems, with or without MSVC, **is not supported**.
+OptimLib is available as a compiled shared library, or as header-only library, for Unix-alike systems only (e.g., popular Linux-based distros, as well as macOS). Note that the use of this library with Windows-based systems, with or without MSVC, **is not supported**.
 
 
 Requirements
 ------------
 
-OptimLib requires either the Armadillo or Eigen C++ linear algebra libraries. (Note that Eigen version 3.4.0 requires a C++14-compatible compiler.)
+OptimLib requires either the Armadillo or Eigen(3) C++ linear algebra libraries. (Note that Eigen version 3.4.0 requires a C++14-compatible compiler.)
 
 The following options should be declared **before** including the OptimLib header files. 
 

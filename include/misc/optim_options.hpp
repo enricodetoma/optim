@@ -1,6 +1,6 @@
 /*################################################################################
   ##
-  ##   Copyright (C) 2016-2022 Keith O'Hara
+  ##   Copyright (C) 2016-2023 Keith O'Hara
   ##
   ##   This file is part of the OptimLib C++ library.
   ##
@@ -32,20 +32,32 @@
 #endif
 
 #ifndef OPTIM_VERSION_MINOR
-    #define OPTIM_VERSION_MINOR 0
+    #define OPTIM_VERSION_MINOR 1
 #endif
 
 #ifndef OPTIM_VERSION_PATCH
-    #define OPTIM_VERSION_PATCH 0
+    #define OPTIM_VERSION_PATCH 2
 #endif
 
 //
 
 //
 
-#ifdef OPTIM_USE_OPENMP
-    #include "omp.h" //  OpenMP
+#if defined(_OPENMP) && !defined(OPTIM_DONT_USE_OPENMP)
+    #undef OPTIM_USE_OPENMP
+    #define OPTIM_USE_OPENMP
 #endif
+
+#if !defined(_OPENMP) && defined(OPTIM_USE_OPENMP)
+    #undef OPTIM_USE_OPENMP
+
+    #undef OPTIM_DONT_USE_OPENMP
+    #define OPTIM_DONT_USE_OPENMP
+#endif
+
+// #ifdef OPTIM_USE_OPENMP
+    // #include "omp.h" //  OpenMP
+// #endif
 
 #ifdef OPTIM_DONT_USE_OPENMP
     #ifdef OPTIM_USE_OPENMP
@@ -61,9 +73,19 @@
 
 // floating point number type
 
-#define OPTIM_FPN_TYPE double
-#undef OPTIM_FPN_SMALL_NUMBER
-#define OPTIM_FPN_SMALL_NUMBER fp_t(1e-08)
+#ifndef OPTIM_FPN_TYPE
+    #define OPTIM_FPN_TYPE double
+#endif
+
+#if OPTIM_FPN_TYPE == float
+    #undef OPTIM_FPN_SMALL_NUMBER
+    #define OPTIM_FPN_SMALL_NUMBER fp_t(1e-05)
+#elif OPTIM_FPN_TYPE == double
+    #undef OPTIM_FPN_SMALL_NUMBER
+    #define OPTIM_FPN_SMALL_NUMBER fp_t(1e-08)
+#else
+    #error OptimLib: floating-point number type (OPTIM_FPN_TYPE) must be 'float' or 'double'
+#endif
 
 //
 
@@ -114,11 +136,15 @@ namespace optim
     namespace optim
     {
         using Mat_t = arma::Mat<fp_t>;
+
         using ColVec_t = arma::Col<fp_t>;
         using RowVec_t = arma::Row<fp_t>;
+
         using ColVecInt_t = arma::Col<int>;
         using RowVecInt_t = arma::Row<int>;
+
         using ColVecUInt_t = arma::Col<unsigned long long>;
+        using RowVecUInt_t = arma::Row<unsigned long long>;
     }
 #elif defined(OPTIM_ENABLE_EIGEN_WRAPPERS) || defined(OPTIM_USE_RCPP_EIGEN)
     #ifndef OPTIM_ENABLE_EIGEN_WRAPPERS
@@ -143,11 +169,15 @@ namespace optim
     namespace optim
     {
         using Mat_t = Eigen::Matrix<fp_t, Eigen::Dynamic, Eigen::Dynamic>;
+
         using ColVec_t = Eigen::Matrix<fp_t, Eigen::Dynamic, 1>;
         using RowVec_t = Eigen::Matrix<fp_t, 1, Eigen::Dynamic>;
+
         using ColVecInt_t = Eigen::Matrix<int, Eigen::Dynamic, 1>;
         using RowVecInt_t = Eigen::Matrix<int, 1, Eigen::Dynamic>;
+
         using ColVecUInt_t = Eigen::Matrix<size_t, Eigen::Dynamic, 1>;
+        using RowVecUInt_t = Eigen::Matrix<size_t, 1, Eigen::Dynamic>;
     }
 #else
     #error OptimLib: you must enable the Armadillo OR Eigen wrappers

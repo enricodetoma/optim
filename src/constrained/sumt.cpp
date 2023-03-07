@@ -1,6 +1,6 @@
 /*################################################################################
   ##
-  ##   Copyright (C) 2016-2022 Keith O'Hara
+  ##   Copyright (C) 2016-2023 Keith O'Hara
   ##
   ##   This file is part of the OptimLib C++ library.
   ##
@@ -75,8 +75,8 @@ optim::internal::sumt_impl(
         ColVec_t constr_vals = constr_fn(vals_inp, &jacob_constr, constr_data);
         ColVec_t tmp_vec = constr_vals;
 
-        reset_negative_values(tmp_vec, constr_vals);
-        reset_negative_rows(tmp_vec, jacob_constr);
+        bmo::reset_negative_values(tmp_vec, constr_vals);
+        bmo::reset_negative_rows(tmp_vec, jacob_constr);
 
         //
 
